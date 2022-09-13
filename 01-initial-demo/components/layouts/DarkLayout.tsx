@@ -1,6 +1,10 @@
+import { FC } from "react"
 
+interface LayoutProps {
+    children: React.ReactNode;
+}
 
-export const DarkLayout = ({ children }) => {
+export const DarkLayout: FC<LayoutProps> = ({ children }) => {
     return (
         <div style={
             {
