@@ -9,6 +9,7 @@ import { pokeApi } from '../../api';
 import { Layout } from '../../components/layouts';
 import { Pokemon } from '../../interfaces/pokemon-full';
 import { localFavorites } from '../../utils';
+import { PokemonListResponse } from '../../interfaces/pokemon-list';
 import { getPokemonInfo } from '../../utils/getPokemonInfo';
 
 
@@ -18,16 +19,14 @@ interface Props {
 }
 
 
-
-const PokemonPage: NextPage<Props> = ({ pokemon }) => {
-
+const PokemonByNamePage: NextPage<Props> = ({ pokemon }) => {
     const [isInfavorites, setIsInfavorites] = useState(localFavorites.existInFavorites(pokemon.id));
 
     const onToggleFavorite = () => {
         localFavorites.toggleFavorite(pokemon.id);
         setIsInfavorites(!isInfavorites);
 
-        if (isInfavorites) return;
+        if (!isInfavorites) return;
 
         confetti({
             zIndex: 999,
@@ -40,15 +39,6 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
             }
         })
     }
-
-    //probar de que lado esta lo que se almacena, cliente o servidor
-    //console.log({ existeWindow: typeof window });
-
-    // useEffect(() => {
-    //     console.log('useEffect', localStorage.getItem('favorites'));
-    // }, []);
-
-
     return (
         <Layout title={pokemon.name}>
             <Grid.Container css={{ marginTop: '5px' }} gap={2}>
@@ -123,27 +113,25 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
 
 
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
-
-    const pokemon151 = [...Array(151)].map((value, index) => `${index + 1}`);
+    const { data } = await pokeApi.get<PokemonListResponse>('/pokemon?limit=151');
+    const pokemonNames: string[] = data.results.map(pokemon => pokemon.name);
 
     return {
-        paths: pokemon151.map(id => ({
-            params: { id }
+        paths: pokemonNames.map(name => ({
+            params: { name }
         })),
         fallback: false
     }
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-    const { id } = params as { id: string };
-
+    const { name } = params as { name: string };
 
 
     return {
         props: {
-            pokemon: await getPokemonInfo(id)
+            pokemon: await getPokemonInfo(name)
         }
     }
 }
-
-export default PokemonPage
+export default PokemonByNamePage
